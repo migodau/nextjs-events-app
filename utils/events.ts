@@ -3,8 +3,9 @@ import { db } from '@/db/db'
 import { asc, eq } from 'drizzle-orm'
 import { events, rsvps } from '@/db/schema'
 import { delay } from './delay'
+import { memoize } from 'nextjs-better-unstable-cache'
 
-export const getEvents = async (userId: string) => {
+export const getEvents = memoize(async (userId: string) => {
     await delay(1000)
 
     const eventsData = await db
@@ -22,4 +23,10 @@ export const getEvents = async (userId: string) => {
         .execute()
 
     return eventsData ?? []
-}
+}, {
+    persist: true,
+    revalidateTags: () => ['dashboard:events'],
+    suppressWarnings: true,
+    log: ['datacache', 'verbose'],
+    logid: 'dashboard:events',
+})
